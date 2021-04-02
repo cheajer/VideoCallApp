@@ -1,43 +1,43 @@
-from socket import *
+import socket
 import threading
 import time
 import datetime as dt
 import sys
 from client_helpers import *
 
-# serverIP = sys.argv[1]
-# serverPort = sys.argv[2]
-# serverUDPPort = sys.argv[3]
-
-#Server would be running on the same host as Client
-serverName = sys.argv[1]
+clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+serverAddr = sys.argv[1]
 serverPort = int(sys.argv[2])
+# clientPort = int(sys.argv[3])
+loggedIn = False
 
-clientSocket = socket(AF_INET, SOCK_DGRAM)
+print('Waiting for connection')
+try:
+    clientSocket.connect((serverAddr, serverPort))
+    print("successful connection")
+except socket.error as e:
+    print(str(e))
 
-while (1):
-    username = input("Username: ")
-    password = input("Password: ")
-    message = username + " " + password
-    clientSocket.sendto(message.encode(),(serverName, serverPort))
-    #wait for the reply from the server
-    receivedMessage, serverAddress = clientSocket.recvfrom(2048)
-
-    if (receivedMessage.decode()=='Login Successful'):
-        print(receivedMessage.decode())
-        command = input(printCommands())
-        clientSocket.sendto(command.encode(),(serverName, serverPort))
-
-        #Wait for 10 back to back messages from server
-        while 1:
-            receivedMessage, serverAddress = clientSocket.recvfrom(2048)
+while True:
+    if loggedIn == False:
+        username = input("Username: ")
+        password = input("Password: ")
+        message = username + " " + password
+        clientSocket.send(str.encode(message))
+        receivedMessage = clientSocket.recvfrom(1024)
+        receivedMessage=receivedMessage[0]
+        if (receivedMessage.decode()=='Login Successful'):
             print(receivedMessage.decode())
-        break
-    elif receivedMessage.decode() == 'Login Attempt Limit Reached. Try again in 10 seconds.':
-        print(receivedMessage.decode())
+            loggedIn=True
+        elif receivedMessage.decode() == 'Login Attempt Limit Reached. Try again in 10 seconds.':
+            print(receivedMessage.decode())
+        else:
+            print(receivedMessage.decode())
     else:
-        print(receivedMessage.decode())
+        command = input(printCommands())
+        if checkValidCommand(command):
+            clientSocket.send(str.encode(command))
+        else:
+            print("Invalid Command.")
 
-clientSocket.sendto(message.encode(),(serverName, serverPort))
 clientSocket.close()
-# Close the socket
