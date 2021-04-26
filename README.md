@@ -2,6 +2,17 @@
 
 A server and client app that allows multiple clients to connect to a server simultaneously and send messages/ files between one another. 
 
+# Running the app
+
+To run the app:
+
+1. python3 server.py [maximum attempts allowed at login] [server port]
+
+Run clients in separate folders:
+
+1. python3 client.py [server address] [server port] [client UDP port for file sharing]
+
+
 # Connection types
 
 Clients send files to one another via UDP.
